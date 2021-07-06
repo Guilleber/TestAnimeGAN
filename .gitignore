@@ -1,5 +1,6 @@
 saved_models/
 data/
+.vs/
 **/__pycache__/
 
 *.swp
