@@ -1,6 +1,7 @@
 saved_models/
 data/
 .vs/
+lightning_logs/
 **/__pycache__/
 
 *.swp
