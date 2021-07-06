@@ -9,6 +9,9 @@ import pytorch_lightning as pl
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as T
 
+from modules import Generator, Discriminator
+import losses
+
 
 def collate_fn(batch):
     batch = torch.stack([item[0] for item in batch])
@@ -30,22 +33,16 @@ class AnimeGAN(pl.LightningModule):
         gray = batch['gray']
         smooth = batch['smooth']
 
-        fake = self.generator(batch['original'])
+        input = batch['original']
+        fake = self.generator(input)
 
         #optimize discriminator
         d_real = self.discriminator(real)
-        err_d_real = torch.mean((d_real - 1)**2)
-        
         d_fake = self.discriminator(fake.detach())
-        err_d_fake = torch.mean(d_fake**2)
-
         d_gray = self.discriminator(gray)
-        err_d_gray = torch.mean(d_gray**2)
-
         d_smooth = self.discriminator(smooth)
-        err_d_smooth = torch.mean(d_smooth**2)
 
-        err_d = 1.7*err_d_real + 1.7*err_d_fake + 1.7*gray_loss + 1.0*err_d_smooth
+        err_d = self.hparams.d_weight * losses.d_loss(d_real, d_fake, d_gray, d_smooth)
 
         d_opt.zero_grad()
         self.manual_backward(err_d)
@@ -53,7 +50,11 @@ class AnimeGAN(pl.LightningModule):
 
         #optimize generator
         d_fake = self.discriminator(fake)
-        err_g = torch.mean((d_fake - 1)**2)
+        err_g = self.hparams.g_weight * losses.g_loss(d_fake)
+
+        err_g += self.hparams.con_weight*losses.con_loss(input, fake)
+        err_g += self.hparams.color_weight*losses.color_loss(input, fake)
+        err_g += self.hparams.style_weight*losses.style_loss(input, fake)
 
         g_opt.zero_grad()
         self.manual_backward(err_g)
