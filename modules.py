@@ -6,7 +6,8 @@ import torch.nn.functional as F
 class ConvNormLReLU(nn.Sequential):
     def __init__(self, in_ch, out_ch, kernel_size=3, stride=1, padding=1, groups=1, bias=False):    
         super(ConvNormLReLU, self).__init__(
-            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=stride, padding=padding, groups=groups, bias=bias),
+            nn.ZeroPad2d(padding),
+            nn.Conv2d(in_ch, out_ch, kernel_size=kernel_size, stride=stride, padding=0, groups=groups, bias=bias),
             nn.GroupNorm(num_groups=1, num_channels=out_ch, affine=True),
             nn.LeakyReLU(0.2)
         )
@@ -38,7 +39,7 @@ class InvertedResBlock(nn.Module):
 
     
 class Generator(nn.Module):
-    def __init__(self, ):
+    def __init__(self):
         super().__init__()
         
         self.block_a = nn.Sequential(
@@ -118,5 +119,5 @@ class Discriminator(nn.Module):
         self.layers = nn.Sequential(*layers)
         return
 
-    def forward(x):
+    def forward(self, x):
         return self.layers(x)

@@ -12,7 +12,7 @@ def d_loss(d_real: Tensor, d_fake: Tensor, d_gray: Tensor, d_smooth: Tensor) -> 
 
     err_smooth = torch.mean(d_smooth**2)
 
-    return 1.7*err_d_real + 1.7*err_d_fake + 1.7*gray_loss + 1.0*err_d_smooth
+    return 1.7*err_d_real + 1.7*err_d_fake + 1.7*gray_loss + 0.8*err_d_smooth
 
 def g_loss(d_fake: Tensor) -> Tensor:
     return torch.mean((d_fake - 1)**2)
