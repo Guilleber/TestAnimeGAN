@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+from pytorch_lightning.plugins import DDPPlugin
 
 import torch
 
@@ -15,8 +16,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_weights_from', type=str, default=None)
     parser.add_argument('--save_best_model', action='store_true')
     
-    parser.add_argument('--bs', type=int, help="mini-batch size", default=16)
-    parser.add_argument('--gpus', type=int, default=0)
+    parser.add_argument('--bs', type=int, help="mini-batch size", default=4)
+    parser.add_argument('--gpus', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=101)
 
     parser = AnimeGAN.add_model_specific_args(parser)
@@ -38,21 +39,21 @@ if __name__ == '__main__':
     # saves best model
     callbacks = []
     if args.save_best_model:
-        checkpoint_callback = pl.callbacks.ModelCheckpoint(monitor='epoch',
+        checkpoint_callback = pl.callbacks.ModelCheckpoint(monitor=None,
                                              dirpath='./saved_models/',
                                              filename=args.exp_name + '-{epoch:02d}-{val_acc:2.2f}',
-                                             save_top_k=1,
-                                             verbose=True,
-                                             mode='max')
+                                             save_last=True,
+                                             verbose=True)
         callbacks.append(checkpoint_callback)
 
     trainer = pl.Trainer(gpus=args.gpus,
                          accelerator='ddp',
+                         plugins=[DDPPlugin(find_unused_parameters=False)],
                          checkpoint_callback=args.save_best_model,
                          callbacks=callbacks,
-                         gradient_clip_val=2.,
                          max_epochs=args.epochs,
-                         limit_val_batches=0)
+                         limit_val_batches=0,
+                         profiler='simple')
 
     trainer.fit(model)
 

@@ -12,7 +12,7 @@ def d_loss(d_real: Tensor, d_fake: Tensor, d_gray: Tensor, d_smooth: Tensor) -> 
 
     err_smooth = torch.mean(d_smooth**2)
 
-    return 1.7*err_d_real + 1.7*err_d_fake + 1.7*gray_loss + 0.8*err_d_smooth
+    return 1.7*err_real + 1.7*err_fake + 1.7*err_gray + 0.8*err_smooth
 
 def g_loss(d_fake: Tensor) -> Tensor:
     return torch.mean((d_fake - 1)**2)
@@ -30,9 +30,9 @@ def style_loss(input: Tensor, fake: Tensor) -> Tensor:
     return torch.mean(torch.abs(gram(input) - gram(fake)))
 
 def rgb2yuv(input: Tensor) -> Tensor:
-    r = image[..., 0, :, :]
-    g = image[..., 1, :, :]
-    b = image[..., 2, :, :]
+    r = input[..., 0, :, :]
+    g = input[..., 1, :, :]
+    b = input[..., 2, :, :]
 
     y = 0.299 * r + 0.587 * g + 0.114 * b
     u = -0.147 * r - 0.289 * g + 0.436 * b

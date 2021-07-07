@@ -31,9 +31,9 @@ class AnimeGAN(pl.LightningModule):
     def add_model_specific_args(parent_parser):
         parser = parent_parser.add_argument_group("Model")
         parser.add_argument('--real_path', type=str, default="./data/original/")
-        parser.add_argument('--original_path', type=str, default="./data/Shinkai/")
+        parser.add_argument('--original_path', type=str, default="./data/shinkai/")
 
-        parser.add_argument('--d_channels', type=int, default=64)
+        parser.add_argument('--d_channels', type=int, default=32)
         parser.add_argument('--d_layers', type=int, default=3)
 
         parser.add_argument('--init_lr', type=float, default=2e-4, help='The learning rate')
@@ -81,7 +81,7 @@ class AnimeGAN(pl.LightningModule):
         self.manual_backward(err_g)
         g_opt.step()
 
-        self.log_dict({'g_loss': err_g, 'd_loss': err_d})
+        self.log_dict({'g_loss': err_g, 'd_loss': err_d}, prog_bar=True)
         return
 
     def train_dataloader(self):
@@ -91,28 +91,28 @@ class AnimeGAN(pl.LightningModule):
                 T.ToTensor()
             ])
         real_dataset = ImageFolder(self.hparams.real_path, transform=real_transforms)
-        dataloaders['real'] = DataLoader(real_dataset, collate_fn=collate_fn)
+        dataloaders['real'] = DataLoader(real_dataset, collate_fn=collate_fn, shuffle=True, num_workers=8)
 
         original_transforms = T.Compose([
                 T.RandomResizedCrop(256, scale=(0.3, 1.0), ratio=(1.0, 1.0)),
                 T.ToTensor()
             ])
         original_dataset = ImageFolder(self.hparams.original_path, transform=original_transforms)
-        dataloaders['original'] = DataLoader(original_dataset, collate_fn=collate_fn)
+        dataloaders['original'] = DataLoader(original_dataset, collate_fn=collate_fn, shuffle=True, num_workers=8)
 
         gray_transforms = T.Compose([
                 T.Grayscale(num_output_channels=3),
                 T.ToTensor()
             ])
         gray_dataset = ImageFolder(self.hparams.real_path, transform=gray_transforms)
-        dataloaders['gray'] = DataLoader(gray_dataset, collate_fn=collate_fn)
+        dataloaders['gray'] = DataLoader(gray_dataset, collate_fn=collate_fn, shuffle=True, num_workers=8)
 
         smooth_transforms = T.Compose([
                 T.GaussianBlur(5, sigma = (2.0, 5.0)),
                 T.ToTensor()
             ])
         smooth_dataset = ImageFolder(self.hparams.real_path, transform=smooth_transforms)
-        dataloaders['smooth'] = DataLoader(smooth_dataset, collate_fn=collate_fn)
+        dataloaders['smooth'] = DataLoader(smooth_dataset, collate_fn=collate_fn, shuffle=True, num_workers=8)
 
         return dataloaders
 
