@@ -12,7 +12,7 @@ def d_loss(d_real: Tensor, d_fake: Tensor, d_gray: Tensor, d_smooth: Tensor) -> 
 
     err_smooth = torch.mean(d_smooth**2)
 
-    return 1.7*err_real + 1.7*err_fake + 1.7*err_gray + 0.8*err_smooth
+    return 1.7*err_real + 1.7*err_fake + 1.7*err_gray + 1.0*err_smooth
 
 def g_loss(d_fake: Tensor) -> Tensor:
     return torch.mean((d_fake - 1)**2)
@@ -45,4 +45,9 @@ def color_loss(input: Tensor, fake: Tensor) -> Tensor:
     input = rgb2yuv(input)
     fake = rgb2yuv(fake)
 
-    return torch.mean(torch.abs(input[:,:,:,0] - fake[:,:,:,0])) + F.smooth_l1_loss(input[:,:,:,1], fake[:,:,:,1]) + F.smooth_l1_loss(input[:,:,:,2], fake[:,:,:,2])
+    return torch.mean(torch.abs(input[:,0,:,:] - fake[:,0,:,:])) + F.smooth_l1_loss(input[:,1,:,:], fake[:,1,:,:]) + F.smooth_l1_loss(input[:,2,:,:], fake[:,2,:,:])
+
+def total_variation_loss(input: Tensor) -> Tensor:
+    dh = input[:, :, :-1, :] - input[:, :, 1:, :]
+    dw = input[:, :, :, :-1] - input[:, :, :, 1:]
+    return (dh**2).mean()/2. + (dw**2).mean()/2.

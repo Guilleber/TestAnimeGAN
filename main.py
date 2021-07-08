@@ -18,7 +18,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--bs', type=int, help="mini-batch size", default=4)
     parser.add_argument('--gpus', type=int, default=1)
-    parser.add_argument('--epochs', type=int, default=101)
+    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--init_epochs', type=int, default=10)
 
     parser = AnimeGAN.add_model_specific_args(parser)
 
