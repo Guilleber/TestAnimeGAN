@@ -54,8 +54,8 @@ class Generator(nn.Module):
         )
         
         self.block_c = nn.Sequential(
-            ConvNormLReLU(128, 128),
-            InvertedResBlock(128, 256, 2),
+            ConvNormLReLU(128, 256),
+            InvertedResBlock(256, 256, 2),
             InvertedResBlock(256, 256, 2),
             InvertedResBlock(256, 256, 2),
             InvertedResBlock(256, 256, 2),

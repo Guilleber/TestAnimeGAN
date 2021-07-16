@@ -37,15 +37,15 @@ class AnimeGAN(pl.LightningModule):
         parser.add_argument('--d_layers', type=int, default=3)
 
         parser.add_argument('--init_lr', type=float, default=2e-5, help='The learning rate')
-        parser.add_argument('--g_lr', type=float, default=2e-6, help='The learning rate')
+        parser.add_argument('--g_lr', type=float, default=5e-6, help='The learning rate')
         parser.add_argument('--d_lr', type=float, default=4e-6, help='The learning rate')
 
         parser.add_argument('--g_weight', type=float, default=300.0, help='Weight about GAN')
         parser.add_argument('--d_weight', type=float, default=300.0, help='Weight about GAN')
-        parser.add_argument('--tv_weight', type=float, default=1.0, help='Weight about GAN')
-        parser.add_argument('--con_weight', type=float, default=1.2, help='Weight about VGG19')
-        parser.add_argument('--style_weight', type=float, default=2.0, help='Weight about style')
-        parser.add_argument('--color_weight', type=float, default=10.0, help='Weight about color')
+        parser.add_argument('--tv_weight', type=float, default=5.0, help='Weight about GAN')
+        parser.add_argument('--con_weight', type=float, default=5.0, help='Weight about VGG19')
+        parser.add_argument('--style_weight', type=float, default=10.0, help='Weight about style')
+        parser.add_argument('--color_weight', type=float, default=50.0, help='Weight about color')
         return parent_parser
 
     def training_step(self, batch, batch_idx):
@@ -82,10 +82,14 @@ class AnimeGAN(pl.LightningModule):
         d_fake = self.discriminator(fake)
         err_g = self.hparams.g_weight * losses.g_loss(d_fake)
 
-        err_g += self.hparams.con_weight*losses.con_loss(input, fake)
-        err_g += self.hparams.color_weight*losses.color_loss(input, fake)
-        err_g += self.hparams.style_weight*losses.style_loss(input, fake)
-        err_g += self.hparams.tv_weight*losses.total_variation_loss(input)
+        con_loss = self.hparams.con_weight*losses.con_loss(input, fake)
+        err_g += con_loss
+        color_loss = self.hparams.color_weight*losses.color_loss(input, fake)
+        err_g += color_loss
+        style_loss = self.hparams.style_weight*losses.style_loss(input, fake)
+        err_g += style_loss
+        tv_loss = self.hparams.tv_weight*losses.total_variation_loss(input)
+        err_g += tv_loss
 
         g_opt.zero_grad()
         self.manual_backward(err_g)
@@ -104,7 +108,7 @@ class AnimeGAN(pl.LightningModule):
         dataloaders['real'] = DataLoader(real_dataset, batch_size=self.hparams.bs, collate_fn=collate_fn, shuffle=True, num_workers=8)
 
         original_transforms = T.Compose([
-                T.RandomResizedCrop(256, scale=(0.3, 1.0), ratio=(1.0, 1.0)),
+                T.RandomResizedCrop(256, scale=(0.2, 0.2), ratio=(1.0, 1.0)),
                 T.ToTensor()
             ])
         original_dataset = ImageFolder(self.hparams.original_path, transform=original_transforms)
